@@ -163,6 +163,7 @@ void main(void)
 
 void clustering()
 {
+	// flgoritm
  //   https://habrahabr.ru/post/101338/
 
 }
@@ -174,7 +175,7 @@ void adaptive_threshold()
         for (i = 0; i < EQ64/2; i++) //построчный обход
             for (j = 0; j < EQ256; j++)
             {
-                if (5-j < 0 || j <= (EQ256-5)) {
+                if (5-j <= 0 && j <= (EQ256-5)) {
                     S1 = C[i][j-5] + C[i][j-4] + C[i][j-3];
                     S1 /= 3;
                     S2 = C[i][j+3] + C[i][j+4] + C[i][j+5];
@@ -194,7 +195,7 @@ void adaptive_threshold()
                         D[i][j] = 0;
                     continue;
                 }
-                if (j >= EQ256-3) {
+                if (j >= EQ256-2) {
                     S1 = C[i][j-3] + C[i][j-4] + C[i][j-5];
                     S1 /= 3;
                     if ( tr*S1 < C[i][j] )
@@ -224,7 +225,7 @@ void adaptive_threshold()
                         D[i][j] = 0;
                     continue;
                 }
-                if (j == 251) {
+                if (j == EQ256 - 3) {
                     S1 = C[i][j-3] + C[i][j-4] + C[i][j-5];
                     S1 /= 3;
                     S2 = C[i][j+3];
@@ -234,7 +235,7 @@ void adaptive_threshold()
                         D[i][j] = 0;
                     continue;
                 }
-                if (j == 250) {
+                if (j == EQ256 - 4) {
                     S1 = C[i][j-3] + C[i][j-4] + C[i][j-5];
                     S1 /= 3;
                     S2 = C[i][j+3] + C[i][j+4];
