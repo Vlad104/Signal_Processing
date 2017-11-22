@@ -101,3 +101,67 @@ for i = 1:EQ64
     end;
 end;
 
+%F for phase
+for i = 1:EQ64
+    for j = 1:EQ256
+        if ( D(i,j) > 0 )
+            E(i,j) = atan( imag(B1(i,j))/real(B1(i,j)) ) - atan( imag(B2(i,j))/real(B2(i,j)) );
+        else
+            E(i,j) = atan( imag(B1(i,j))/real(B1(i,j)) ) - atan( imag(B2(i,j))/real(B2(i,j)) );
+        end;            
+    end;
+end;
+
+%F for clusters 1 - L, 2 - V, 3 - phase
+N = 100; %numbers of clusters
+
+for i = 1:N
+    for j = 1:EQ256
+        G(i,j) = 0; %matrix of flag
+    end;
+end;
+
+for i = 1:N
+	for j = 1:3
+        F(i,j) = 0;
+	end;
+end;
+n = 0;
+% ÍÓÆÍÎ ÄÎÌÍÎÆÈÒÜ ÍÀ P ¹¹
+for i = 1:EQ64
+    for j = 1:EQ256
+        if ( G(i,j) == 0 ) %cell is not cheked
+            if ( D(i,j) > 0 )
+                F(n,1) = F(n,1) + j;
+                F(n,2) = F(n,2) + EQ64/2 - i;
+                F(n,3) = F(n,3) + E(i,j); 
+                G(i,j) = 1;
+            end;
+            
+            if ( j - 1 > 0)
+                if ( D(i,j-1) > 0 )
+                    F(n,1) = F(n,1) + j-1;
+                    F(n,2) = F(n,2) + EQ64/2 - i;
+                    F(n,3) = F(n,3) + E(i,j-1); 
+                    G(i-1,j) = 1;
+                end;
+            end;
+            
+            if ( j + 1 > 0) 
+                if ( D(i,j-1) > 0 )
+                    F(n,1) = F(n,1) + j;
+                    F(n,2) = F(n,2) + EQ64/2 - i;
+                    F(n,3) = F(n,3) + E(i,j); 
+                    G(i-1,j) = 1;
+                end;
+            end;
+            
+            %%( i - 1 > 0) and ( i + 1 > 0)
+            
+            
+            n = n + 1; %next cluster
+        end;
+    end;
+end;
+
+
