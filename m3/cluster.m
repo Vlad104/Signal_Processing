@@ -17,8 +17,9 @@ D(2,2) = 1;
 D(3,2) = 1;
 D(4,2) = 1;
 D(4,1) = 1;
-D(4,3) = 1;
-%D(3,4) = 1;
+%D(4,3) = 1;
+D(3,4) = 1;
+D(4,4) = 1;
 
 B = A.*D;
 F(1:int32(EQ64*EQ256/2),1) = 0;
@@ -28,17 +29,16 @@ n = 1;
 BB = B;
 for ii = 1 : EQ64
 	for jj = 1 : EQ256 %#ok<ALIGN>
-        flag = 0;
-        hnn = 1; 
-        while ( hnn > 0 && D(ii,jj) > 0 ) %&& G(ii,jj) == 0 %(~flag || hnn > 0)
-            if ~flag %if first times in while
-                i = ii;
-                j = jj; 
-                flag = 1;
-            else %if not first times in while
+        hnn = 1; %проблема здесь
+        i = ii;
+        j = jj;
+        flag = 0; %first IN from this point
+        while ( hnn > 0 ) %&& G(ii,jj) == 0 %(~flag || hnn > 0) %нужно проверять D и G для следующей точки, а не старой!! && D(i,j) > 0 && G(i,j) == 0 
+            if flag %if not first times in while
                 i = K(hnn,1);
                 j = K(hnn,2);
             end;
+            flag = 1;          
 
             if ( j <= EQ256 && i <= EQ64 && G(i,j) == 0 && D(i,j) > 0 )
             	F(n,1) = F(n,1) + 1;
@@ -74,7 +74,12 @@ for ii = 1 : EQ64
                     K(hnn,1) = i-1;
                     K(hnn,2) = j;
                	end;
+            else
+                break;
             end;
+        %if ( hnn > 0 && D(i,j) > 0 && G(i,j) == 0 )
+            %break;
+        %end;
         end;
         if (F(n,1) > 0)
         	n = n + 1;
