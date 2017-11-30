@@ -1,16 +1,11 @@
-clear
+%clear
 EQ256 = 16;
 EQ64 = 8;
-for i = 1:EQ64
-    x = 0;
-    for j = 1:EQ256
-        signal = sin(x);
-        A1in(i,j) = signal;
-        signal = sin(x+0.1);
-        A2in(i,j) = signal;        
-        x = x + 2*pi/EQ256;
-    end;
-end;
+
+[A1in,A2in] = func_sin_1();
+%A1in = SS;
+%A2in = SS;
+
 A1in = A1in';
 A2in = A2in';
 
@@ -112,56 +107,81 @@ for i = 1:EQ64
     end;
 end;
 
-%F for clusters 1 - L, 2 - V, 3 - phase
-N = 100; %numbers of clusters
+G(1:EQ64,1:EQ256) = 0;
+F(1:int32(EQ64*EQ256/2),6) = 0; % 1- номер обл, 2-сумм мощность, 3-дальность, 4- скор, 5 - угол, кол-во точек (не нужно)
+H(1:EQ64,1:EQ256) = 0;
+K(1:EQ256/4*EQ64/4,1:2) = 0;
+n = 1;
+N = 1;
+BB = C;
+for ii = 1 : EQ64
+	for jj = 1 : EQ256 %#ok<ALIGN>
+        hnn = 1;
+        i = ii;
+        j = jj;
+        flag = 0; %first IN from this point
+        while ( hnn > 0 )
+            if flag %if not first times in while
+                i = K(hnn,1);
+                j = K(hnn,2);
+            end;
+            flag = 1;          
 
-for i = 1:N
-    for j = 1:EQ256
-        G(i,j) = 0; %matrix of flag
-    end;
-end;
+            if ( j <= EQ256 && i <= EQ64 && G(i,j) == 0 && D(i,j) > 0 )
+            	
+                F(n,1) = n;
+                F(n,2) = F(n,2) + C(i,j);                
+                F(n,3) = F(n,3) + j*C(i,j);
+            	F(n,4) = F(n,4) + (i - EQ64/2)*C(i,j);                
+            	F(n,5) = F(n,5) + E(i,j)*C(i,j);
+                F(n,6) = F(n,6) + 1; %dont need
+                
+            	G(i,j) = 1;
+            	H(i,j) = 0;
+            	BB(i,j) = 2;                
+                hnn = hnn - 1;
+                
+            	if ( j + 1 <= EQ256 && G(i, j+1) == 0 && D(i, j+1) > 0 ) %#ok<ALIGN>
+                	H(i,j+1) = 1;
+                    hnn = hnn + 1;
+                    K(hnn,1) = i;
+                    K(hnn,2) = j+1;
+                end;
 
-for i = 1:N
-	for j = 1:3
-        F(i,j) = 0;
-	end;
-end;
-n = 0;
-% Ќ”∆Ќќ ƒќћЌќ∆»“№ Ќј P єє
-for i = 1:EQ64
-    for j = 1:EQ256
-        if ( G(i,j) == 0 ) %cell is not cheked
-            if ( D(i,j) > 0 )
-                F(n,1) = F(n,1) + j;
-                F(n,2) = F(n,2) + EQ64/2 - i;
-                F(n,3) = F(n,3) + E(i,j); 
-                G(i,j) = 1;
-            end;
-            
-            if ( j - 1 > 0)
-                if ( D(i,j-1) > 0 )
-                    F(n,1) = F(n,1) + j-1;
-                    F(n,2) = F(n,2) + EQ64/2 - i;
-                    F(n,3) = F(n,3) + E(i,j-1); 
-                    G(i,j-1) = 1;
+                if ( j - 1 >= 1 && G(i, j-1) == 0 && D(i, j-1) > 0 )
+                	H(i,j-1) = 1;
+                    hnn = hnn + 1; 
+                    K(hnn,1) = i;
+                    K(hnn,2) = j-1;
                 end;
-            end;
-            
-            if ( j + 1 > 0) 
-                if ( D(i,j-1) > 0 )
-                    F(n,1) = F(n,1) + j;
-                    F(n,2) = F(n,2) + EQ64/2 - i;
-                    F(n,3) = F(n,3) + E(i,j); 
-                    G(i-1,j) = 1;
+
+                if ( i + 1 <= EQ64 && G(i+1, j) == 0 && D(i+1, j) > 0 )
+                	H(i+1,j) = 1;
+                    hnn = hnn + 1; 
+                    K(hnn,1) = i+1;
+                    K(hnn,2) = j;
                 end;
+
+                if ( i - 1 >= 1 && G(i-1, j) == 0 && D(i-1, j) > 0 )
+                	H(i-1,j) = 1;
+                    hnn = hnn + 1; 
+                    K(hnn,1) = i-1;
+                    K(hnn,2) = j;
+               	end;
+            else
+                break;
             end;
-            
-            %%( i - 1 > 0) and ( i + 1 > 0)
-            
-            
-            n = n + 1; %next cluster
+        end;
+        if (F(n,2) > 0)
+        	n = n + 1;
         end;
     end;
 end;
 
-
+for i = 1:int32(EQ64*EQ256/2)
+	if (F(n,2) > 0)
+        F(i,3) = F(i,3)/F(i,2);
+        F(i,4) = F(i,4)/F(i,2);
+        F(i,5) = F(i,5)/F(i,2);
+	end;
+end;
